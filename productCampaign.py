@@ -8,17 +8,17 @@ def callapi(fileArray, api_key):
     start_time = time.time()  
     url = "https://api.worqhat.com/api/ai/content/v4"  
     payload = json.dumps({
-        "question": "I am sending you some images which denote a product that I have come up with. I want you to look at the images and first return the objects and features you can see in a JSON format and then write a marketing campaign about the said product.", 
-        "training_data": "You have to look at the images and get the objects and features in a json file and also write a marketing campaign about the product in the images",
+        "question": "I am sending you some images which denote a product that I have come up with. I want you to look at the images and first return the objects and features you can see,Then a Heading which will be the name of the product  and then a subheading which will be a tagline of the product and then a marketing campaign for the said product  in a JSON format", 
+        "training_data": "You have to look at the images and get the objects and features in a json file and also write a marketing campaign make it attractive with headings and hashtags maybe use cases about the product in the images,Return the json with keys objects_and_features,Heading,Subheading,Marketing Campaign ",
         "response_type":"json",
-        "model": "aicon-v4-large-160824",
+        "model": "aicon-v4-nano-160824",
         "files":fileArray
     })
     
     headers = {
-        'Accept': 'application/json',
+        'Accept': 'application/x-www-form-urlencoded',
         "Authorization": f"Bearer {api_key}",
-        'Content-Type':'application/json'
+        'Content-Type':'application/x-www-form-urlencoded'
     }
 
     st.write("The request is being sent")
@@ -71,9 +71,26 @@ if st.button("Send") and uploaded_images:
     response_v2, duration_v2 = callapi(files, api_key)
 
     if response_v2:
-        st.success(
-            f"Product campaign created successfully - Time taken: {duration_v2} seconds")
-        st.markdown(f"[View Campaign]({response_v2})")
+        content = response_v2.get('content', '')
+
+        # Debug: Print the entire content to understand its structure
+        st.write("Response Content:")
+        st.json(content)  # This will print the entire JSON content in a formatted way
+
+        # Parse the content string into a dictionary
+        try:
+            parsed_content = json.loads(content)
+            st.success(f"Product campaign created successfully - Time taken: {duration_v2} seconds")
+            
+            # Print each part on a separate line
+            st.markdown(f"**Objects and Features:** {', '.join(parsed_content.get('objects_and_features', []))}")
+            st.markdown(f"**Heading:** {parsed_content.get('Heading', '')}")
+            st.markdown(f"**Subheading:** {parsed_content.get('Subheading', '')}")
+            st.markdown(f"**Marketing Campaign:**", unsafe_allow_html=True)
+            st.markdown(parsed_content.get('Marketing Campaign', ''), unsafe_allow_html=True)
+        except json.JSONDecodeError:
+            st.write("Failed to parse the response content. Please check the API response.")
+        
     else:
         st.write("Failed to create the product campaign.")
 
