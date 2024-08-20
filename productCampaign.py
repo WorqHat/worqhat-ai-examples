@@ -7,23 +7,22 @@ import base64
 def callapi(fileArray, api_key):
     start_time = time.time()  
     url = "https://api.worqhat.com/api/ai/content/v4"  
-    payload = json.dumps({
+    payload = {
         "question": "I am sending you some images which denote a product that I have come up with. I want you to look at the images and first return the objects and features you can see,Then a Heading which will be the name of the product  and then a subheading which will be a tagline of the product and then a marketing campaign for the said product  in a JSON format", 
         "training_data": "You have to look at the images and get the objects and features in a json file and also write a marketing campaign make it attractive with headings and hashtags maybe use cases about the product in the images,Return the json with keys objects_and_features,Heading,Subheading,Marketing Campaign ",
         "response_type":"json",
         "model": "aicon-v4-nano-160824",
-        "files":fileArray
-    })
+    }
     
     headers = {
-        'Accept': 'application/x-www-form-urlencoded',
+        
         "Authorization": f"Bearer {api_key}",
-        'Content-Type':'application/x-www-form-urlencoded'
+      
     }
 
     st.write("The request is being sent")
     response = requests.request(
-        "POST", url, headers=headers, data=payload)
+        "POST", url, headers=headers, data=payload, files=fileArray)
     end_time = time.time()  # Record end time
     duration = end_time - start_time  # Calculate duration
     if response.status_code == 200:
@@ -59,13 +58,10 @@ api_key = st.text_input("Enter WorqHat API Key:", type="password")
 if st.button("Send") and uploaded_images:
     st.write("Generating the product campaign...")
     files = [
-        {
-            'fieldname': 'images',
-            'originalname': image.name,
-            'mimetype': image.type,
-            'buffer': base64.b64encode(image.read()).decode('utf-8'),  # Convert buffer to base64 string
-            'size': image.size
-        }
+        (
+            'files', 
+            (image.name, image.read(), image.type)
+        )
         for image in uploaded_images
     ]
     response_v2, duration_v2 = callapi(files, api_key)
