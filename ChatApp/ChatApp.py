@@ -50,22 +50,21 @@ if "messages" not in st.session_state:
 if "conversation_id" not in st.session_state:
     st.session_state.conversation_id = None
 
-# Sidebar for API key input
+# Sidebar for API key and conversation ID input
 with st.sidebar:
     st.title("🔑 API Configuration")
     api_key = st.text_input("Enter your API key:", type="password")
+    conversation_id = st.text_input("Enter a unique conversation ID:")
+
+    # Update session state for conversation ID
+    if conversation_id:
+        st.session_state.conversation_id = conversation_id
 
 st.title("🗨️ Multimodal Chat App")
 st.write("Chat with the AI using text and various file types (audio, video, images).")
 
-# Get conversation ID from user if not already set
-if st.session_state.conversation_id is None:
-    conversation_id = st.text_input("Enter a unique conversation ID:", key="conversation_id_input")
-    if conversation_id:
-        st.session_state.conversation_id = conversation_id
-
 # Chat input area
-if api_key:
+if api_key and st.session_state.conversation_id:
     # Display chat messages
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
@@ -120,7 +119,7 @@ if api_key:
         st.rerun()
 
 else:
-    st.warning("Please enter your API key in the sidebar to start chatting.")
+    st.warning("Please enter your API key and conversation ID in the sidebar to start chatting.")
 
 # Footer
 st.markdown("---")
