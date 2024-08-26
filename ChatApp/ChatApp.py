@@ -63,6 +63,16 @@ with st.sidebar:
 st.title("🗨️ Multimodal Chat App")
 st.write("Chat with the AI using text and various file types (audio, video, images).")
 
+# Function to handle message submission
+def submit():
+    st.session_state.prompt = st.session_state.user_input  # Store the current input
+    st.session_state.user_input = ''  # Clear the input field
+
+# Function to handle file upload and clearing
+def handle_file_upload():
+    st.session_state.uploaded_file = uploaded_file  # Store uploaded file
+    st.session_state.uploaded_file_bytes = uploaded_file.read()  # Read the file data
+
 # Chat input area
 if api_key and st.session_state.conversation_id:
     # Display chat messages
@@ -77,32 +87,35 @@ if api_key and st.session_state.conversation_id:
                     st.write(f"File type '{message['file']['type']}' is not previewable.")
 
     # User input and file uploader
-    prompt = st.text_input("Your message:", key="user_input")
-    uploaded_file = st.file_uploader("Attach a file (optional):", type=["mp3", "wav", "ogg", "mp4", "avi", "mov", "jpg", "jpeg", "png", "gif"], key="file_uploader")
+    st.text_input("Your message:", key="user_input", on_change=submit)
+    uploaded_file = st.file_uploader("Attach a file (optional):", type=["mp3", "wav", "ogg", "mp4", "avi", "mov", "jpg", "jpeg", "png", "gif"])
+
+    # Store the uploaded file in session state
+    if uploaded_file is not None:
+        handle_file_upload()
 
     # Button to send message
-    if st.button("Send") and prompt:
+    if st.button("Send") and st.session_state.prompt:
         # Prepare file data
         file_data = None
         file_info = None
         if uploaded_file:
-            file_bytes = uploaded_file.read()
             file_data = {
-                'files': (uploaded_file.name, file_bytes, uploaded_file.type)
+                'files': (uploaded_file.name, st.session_state.uploaded_file_bytes, uploaded_file.type)
             }
             file_info = {
                 "name": uploaded_file.name,
                 "type": uploaded_file.type,
-                "data": file_bytes
+                "data": st.session_state.uploaded_file_bytes
             }
 
         # Add user message to chat history
-        st.session_state.messages.append({"role": "user", "content": prompt, "file": file_info})
+        st.session_state.messages.append({"role": "user", "content": st.session_state.prompt, "file": file_info})
 
         # Call API and add AI response to chat history
         with st.chat_message("assistant"):
             with st.spinner("Generating response..."):
-                response = call_api(prompt, api_key, file_data, st.session_state.conversation_id)
+                response = call_api(st.session_state.prompt, api_key, file_data, st.session_state.conversation_id)
                 if response and 'content' in response:
                     try:
                         content_dict = json.loads(response['content'])
@@ -115,7 +128,11 @@ if api_key and st.session_state.conversation_id:
                 st.markdown(ai_content)
                 st.session_state.messages.append({"role": "assistant", "content": ai_content, "file": None})
 
-        # Clear input field and file uploader after sending
+        # Clear the uploaded file after sending the message
+        st.session_state.uploaded_file = None
+        st.session_state.uploaded_file_bytes = None
+
+        # Rerun the app to refresh the UI
         st.rerun()
 
 else:
