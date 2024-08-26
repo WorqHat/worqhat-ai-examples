@@ -1,24 +1,24 @@
 import streamlit as st
 import requests
-import time
 import json
 
 # Set page configuration
 st.set_page_config(page_title="Multimodal Chat App", page_icon="🗨️", layout="centered")
 
 # Function to call the API
-def call_api(text_input, api_key, file_data=[], conversation_id=None):
+def call_api(text_input, api_key, file_data=None, conversation_id=None):
+    url = "https://api.worqhat.com/api/ai/content/v4"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+    }
+    
     if file_data:  # If file is uploaded
-        url = "https://api.worqhat.com/api/ai/content/v4"
         payload = {
             "question": f"Please analyze the provided text, audio, video, and image files. Respond to this: {text_input}",
             "model": "aicon-v4-nano-160824",
             "training_data": "Respond in a friendly way, in content make the key to your answer as 'answer'",
             "response_type": "json",
             "conversation_id": conversation_id
-        }
-        headers = {
-            "Authorization": f"Bearer {api_key}",
         }
         try:
             response = requests.post(url, headers=headers, data=payload, files=file_data)
@@ -28,7 +28,6 @@ def call_api(text_input, api_key, file_data=[], conversation_id=None):
             st.error(f"API request failed: {e}")
             return None
     else:  # If no file is uploaded
-        url = "https://api.worqhat.com/api/ai/content/v4"
         payload = {
             "question": f"Please analyze the provided text. Respond to this: {text_input}",
             "model": "aicon-v4-nano-160824",
@@ -36,10 +35,7 @@ def call_api(text_input, api_key, file_data=[], conversation_id=None):
             "response_type": "json",
             "conversation_id": conversation_id
         }
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            'Content-Type': 'application/json'
-        }
+        headers['Content-Type'] = 'application/json'
         try:
             response = requests.post(url, headers=headers, data=json.dumps(payload))
             response.raise_for_status()
@@ -121,7 +117,7 @@ if api_key:
                 st.session_state.messages.append({"role": "assistant", "content": ai_content, "file": None})
 
         # Clear input field and file uploader after sending
-        
+        st.rerun()
 
 else:
     st.warning("Please enter your API key in the sidebar to start chatting.")
