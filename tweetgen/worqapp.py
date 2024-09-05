@@ -11,16 +11,10 @@ import streamlit as st
 import streamlit.components.v1 as components
 import streamlit_analytics
 
-from worqai import Worqhat
+from worqai import Worqhat  # Import the corrected Worqhat class
 
 # Configure logger
 logging.basicConfig(format="\n%(asctime)s\n%(message)s", level=logging.INFO, force=True)
-
-# Assign credentials from environment variable or streamlit secrets dict
-consumer_key = os.getenv("TWITTER_CONSUMER_KEY")
-consumer_secret = os.getenv("TWITTER_CONSUMER_SECRET")
-access_key = os.getenv("TWITTER_ACCESS_KEY")
-access_secret = os.getenv("TWITTER_ACCESS_SECRET")
 
 # Define functions
 def generate_text(topic: str, mood: str = ""):
@@ -44,7 +38,8 @@ def generate_text(topic: str, mood: str = ""):
             mood_prompt = f"{mood} " if mood else ""
             prompt = f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters:\n\n"
 
-            worqhat = Worqhat()
+            # Create Worqhat object with the API key from session state
+            worqhat = Worqhat(api_key=st.session_state.api_key)
             mood_output = f", Mood: {mood}" if mood else ""
             st.session_state.text_error = ""
             st.session_state.n_requests += 1
@@ -69,7 +64,8 @@ def generate_image(prompt: str):
 
     with image_spinner_placeholder:
         with st.spinner("Please wait while your image is being generated..."):
-            worqhat = Worqhat()
+            # Create Worqhat object with the API key from session state
+            worqhat = Worqhat(api_key=st.session_state.api_key)
             prompt_wo_hashtags = re.sub("#[A-Za-z0-9_]+", "", prompt)
             processing_prompt = (
                 "Create a detailed but brief description of an image that captures "
@@ -100,6 +96,8 @@ if "image_error" not in st.session_state:
     st.session_state.image_error = ""
 if "n_requests" not in st.session_state:
     st.session_state.n_requests = 0
+if "api_key" not in st.session_state:
+    st.session_state.api_key = ""
 
 # Force responsive layout for columns also on mobile
 st.write(
@@ -120,6 +118,8 @@ st.markdown(
     "This mini-app generates Tweets using WorqHat's [LLMs](https://www.worqhat.com/ai) for texts and images. You can find the code on [GitHub](https://github.com/ and the author on [Twitter](https://twitter.com/)."
 )
 
+st.session_state.api_key = st.text_input(label="Worqhat API Key", placeholder="Enter your Worqhat API Key")
+
 topic = st.text_input(label="Topic (or hashtag)", placeholder="AI")
 mood = st.text_input(
     label="Mood (e.g. inspirational, funny, serious) (optional)",
@@ -131,7 +131,7 @@ with col1:
         label="Generate text",
         type="primary",
         on_click=generate_text,
-        args=(topic, mood),
+        args=(topic, mood),  # API key is now in session state
     )
 with col2:
     with open("moods.txt") as f:
@@ -140,7 +140,7 @@ with col2:
         label="Feeling lucky",
         type="secondary",
         on_click=generate_text,
-        args=(random.choice(["A random famous person quote", "A random news headline", "A random funny joke"]), random.choice(sample_moods)),
+        args=(random.choice(["A random famous person quote", "A random news headline", "A random funny joke"]), random.choice(sample_moods)),  # API key is now in session state
     )
 
 text_spinner_placeholder = st.empty()
@@ -155,18 +155,19 @@ if st.session_state.tweet:
         components.html(
             f"""
                 <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-size="large" data-text="{st.session_state.tweet}\n - Tweet generated via" data-url="https://tweets.streamlit.app" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-            """,
+""",
             height=45,
         )
     with col2:
         pass # Removed the post tweet button
 
+    # Display the image generated below the generate image button
     if not st.session_state.image:
         st.button(
             label="Generate image",
             type="primary",
             on_click=generate_image,
-            args=[st.session_state.tweet],
+            args=[st.session_state.tweet],  # API key is now in session state
         )
     else:
         st.image(st.session_state.image)
@@ -174,7 +175,7 @@ if st.session_state.tweet:
             label="Regenerate image",
             type="secondary",
             on_click=generate_image,
-            args=[st.session_state.tweet],
+            args=[st.session_state.tweet],  # API key is now in session state
         )
 
     image_spinner_placeholder = st.empty()
