@@ -23,34 +23,6 @@ class Worqhat:
     """WorqHat API Connector."""
 
     @staticmethod
-    def moderate(prompt: str) -> bool:
-        """Call WorqHat Moderation with text prompt.
-        Args:
-            prompt: text prompt
-        Return: boolean if flagged
-        """
-        try:
-            response = requests.post(
-                f"{worqhat_api_url}/content/v4",
-                json={
-                    "question": prompt,
-                    "model": "aicon-v4-nano-160824",
-                    "randomness": 0.5,
-                    "stream_data": False,
-                    "training_data": "You are alex and you are one of the best Tour Guides. answer everything while starting with your name",
-                    "response_type": "text",
-                },
-                headers={"Authorization": f"Bearer {worqhat_api_key}"},
-            )
-            response.raise_for_status()
-            print("The response from the AI is ",response)
-            return response.json()["flagged"]
-
-        except Exception as e:
-            logging.error(f"WorqHat API error: {e}")
-            st.session_state.text_error = f"WorqHat API error: {e}"
-
-    @staticmethod
     def complete(
         prompt: str,
         model: str = "aicon-v4-nano-160824",
@@ -106,7 +78,8 @@ class Worqhat:
                 headers={"Authorization": f"Bearer {worqhat_api_key}"},
             )
             response.raise_for_status()
-            return response.json()["response"]
+            print("The response from the Image AI ",response)
+            return response.json()
 
         except Exception as e:
             logging.error(f"WorqHat API error: {e}")

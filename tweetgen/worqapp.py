@@ -53,6 +53,7 @@ def generate_text(topic: str, mood: str = ""):
             st.session_state.tweet = (
                tweet['content']
             )
+            print("The tweet state is ", st.session_state.tweet)
             logging.info(
                 f"Topic: {topic}{mood_output}\n"
                 f"Tweet: {st.session_state.tweet}"
@@ -81,7 +82,9 @@ def generate_image(prompt: str):
                 
             )
             st.session_state.n_requests += 1
-            st.session_state.image = worqhat.image(processed_prompt)
+            image_fetch=worqhat.image(processed_prompt)
+            print(image_fetch)
+            st.session_state.image = image_fetch['image']
             logging.info(f"Tweet: {prompt}\nImage prompt: {processed_prompt}")
 
 # Configure Streamlit page and state
@@ -95,8 +98,6 @@ if "text_error" not in st.session_state:
     st.session_state.text_error = ""
 if "image_error" not in st.session_state:
     st.session_state.image_error = ""
-if "feeling_lucky" not in st.session_state:
-    st.session_state.feeling_lucky = False
 if "n_requests" not in st.session_state:
     st.session_state.n_requests = 0
 
@@ -126,7 +127,7 @@ mood = st.text_input(
 )
 col1, col2 = st.columns(2)
 with col1:
-    st.session_state.feeling_lucky = not st.button(
+    st.button(
         label="Generate text",
         type="primary",
         on_click=generate_text,
@@ -135,11 +136,11 @@ with col1:
 with col2:
     with open("moods.txt") as f:
         sample_moods = f.read().splitlines()
-    st.session_state.feeling_lucky = st.button(
+    st.button(
         label="Feeling lucky",
         type="secondary",
         on_click=generate_text,
-        args=("A random famous person quote", random.choice(sample_moods)),
+        args=(random.choice(["A random famous person quote", "A random news headline", "A random funny joke"]), random.choice(sample_moods)),
     )
 
 text_spinner_placeholder = st.empty()
