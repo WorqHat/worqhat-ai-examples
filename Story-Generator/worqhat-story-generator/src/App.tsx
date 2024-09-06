@@ -46,11 +46,11 @@ const App: React.FC = () => {
         "https://api.worqhat.com/api/ai/content/v4",
         {
           question: `Generate a story based on this premise: ${premise} but only the ${currentStep}`,
-          model: "aicon-v4-nano-160824",
+          model: "aicon-v4-large-160824",
           randomness: 0.5,
           stream_data: false,
           training_data:
-            "You are a great story writer and create 3 options, return them in a string array.",
+            "You are a great story writer and create 3 options, return them in a string array in key content . ",
           response_type: "json",
         },
         {
@@ -60,7 +60,7 @@ const App: React.FC = () => {
         }
       );
       console.log(response);
-      setStoryOptions(JSON.parse(response.data.content) || []);
+      setStoryOptions(JSON.parse(response.data.content).content || []);
     } catch (error) {
       console.error("Error fetching stories", error);
       alert("Failed to generate stories. Check your API key and premise.");
